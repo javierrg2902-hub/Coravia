@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "eleccion": "Elecciones Generales 2026",
+    "fechaActualizacion": "2026-06-03T21:45:00Z",
+    "faseName": "F7",
+    "faseIdx": 6,
+    "mesasContadas": 14899,
+    "mesasTotal": 24566,
+    "escrutinadoPct": "60.65",
+    "modo": "simulado"
+  },
+  "parlamentarias": {
+    "votosValidos": 0,
+    "blancos": 0,
+    "nulos": 0,
+    "votos": {}
+  },
+  "presidencial": {
+    "vinyas": 0.47,
+    "calleja": 0.33,
+    "santos": 0.12,
+    "blank": 0.06,
+    "null": 0.02
+  },
+  "regionales": []
+}

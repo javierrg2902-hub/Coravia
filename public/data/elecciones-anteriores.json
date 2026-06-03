@@ -1,0 +1,60 @@
+{
+  "elecciones": [
+    {
+      "year": 2022,
+      "label": "Elecciones 2022",
+      "votosPct": {
+        "PLP": 0.21, "PC": 0.18, "MORENA": 0.15, "PL": 0.12,
+        "EP": 0.09, "RC": 0.08, "DC": 0.06, "PM": 0.04,
+        "PAN": 0.04, "PAC": 0.02, "FPLN": 0.01, "PBG": 0.00, "MD": 0.00
+      },
+      "escanos": {
+        "PLP": 7, "PC": 6, "MORENA": 5, "PL": 3, "EP": 2, "RC": 2,
+        "DC": 0, "PM": 0, "PAN": 0, "PAC": 0, "FPLN": 0, "PBG": 0, "MD": 0
+      },
+      "presidencial": {
+        "candidato": "Alejandro Fuertes",
+        "partido": "PLP",
+        "pct": 48.3
+      },
+      "gobernadores": [
+        { "regionId": "E1", "ganador": "Carlos Medina",  "partido": "PL",     "pct": 43.2 },
+        { "regionId": "E2", "ganador": "Luis Morales",   "partido": "PC",     "pct": 51.1 },
+        { "regionId": "E3", "ganador": "Javier Torres",  "partido": "PL",     "pct": 47.8 },
+        { "regionId": "E4", "ganador": "Isabel Silva",   "partido": "EP",     "pct": 38.4 },
+        { "regionId": "E5", "ganador": "Marta Romero",   "partido": "PLP",    "pct": 49.2 },
+        { "regionId": "E6", "ganador": "Roberto Navarro","partido": "PM",     "pct": 44.6 },
+        { "regionId": "E7", "ganador": "Pablo Herrera",  "partido": "PLP",    "pct": 51.3 },
+        { "regionId": "E8", "ganador": "Miguel Vargas",  "partido": "PAN",    "pct": 41.0 }
+      ]
+    },
+    {
+      "year": 2024,
+      "label": "Elecciones 2024",
+      "votosPct": {
+        "PLP": 0.23, "PC": 0.17, "MORENA": 0.17, "PL": 0.11,
+        "EP": 0.10, "RC": 0.09, "DC": 0.05, "PM": 0.04,
+        "PAN": 0.03, "PAC": 0.01, "FPLN": 0.00, "PBG": 0.00, "MD": 0.00
+      },
+      "escanos": {
+        "PLP": 8, "PC": 5, "MORENA": 5, "PL": 3, "EP": 2, "RC": 2,
+        "DC": 0, "PM": 0, "PAN": 0, "PAC": 0, "FPLN": 0, "PBG": 0, "MD": 0
+      },
+      "presidencial": {
+        "candidato": "Rodrigo Vinyas",
+        "partido": "PLP",
+        "pct": 52.7
+      },
+      "gobernadores": [
+        { "regionId": "E1", "ganador": "Ana Flores",     "partido": "PL",     "pct": 44.1 },
+        { "regionId": "E2", "ganador": "Rosa García",    "partido": "MORENA", "pct": 48.9 },
+        { "regionId": "E3", "ganador": "Javier Torres",  "partido": "PL",     "pct": 46.3 },
+        { "regionId": "E4", "ganador": "Carlos Reyes",   "partido": "RC",     "pct": 40.2 },
+        { "regionId": "E5", "ganador": "Marta Romero",   "partido": "PLP",    "pct": 47.8 },
+        { "regionId": "E6", "ganador": "Laura Ríos",     "partido": "MORENA", "pct": 45.9 },
+        { "regionId": "E7", "ganador": "Pablo Herrera",  "partido": "PLP",    "pct": 49.6 },
+        { "regionId": "E8", "ganador": "Gloria Ortiz",   "partido": "MORENA", "pct": 37.5 }
+      ]
+    }
+  ]
+}
