@@ -15,6 +15,14 @@ export default function SeatDistribution({ seats }: Props) {
   const totals: Record<string, number> = {};
   order.forEach((p) => { totals[p] = (totals[p] || 0) + 1; });
 
+  // Cumulative per-party seat index for stable animation keys
+  const seatNums: number[] = [];
+  const seenCount: Partial<Record<string, number>> = {};
+  for (const p of order) {
+    seenCount[p] = (seenCount[p] ?? 0) + 1;
+    seatNums.push(seenCount[p]);
+  }
+
   return (
     <div>
       <div className="label-sm mb-3">Distribución de escaños — Ley D&apos;Hondt</div>
@@ -22,7 +30,7 @@ export default function SeatDistribution({ seats }: Props) {
       <div className="flex gap-px h-8 rounded overflow-hidden mb-3">
         {order.map((p, i) => (
           <motion.div
-            key={`${p}-${i}`}
+            key={`${p}-${seatNums[i]}`}
             className="flex-1 h-full"
             style={{ backgroundColor: CLR[p] }}
             initial={{ opacity: 0, scaleY: 0 }}

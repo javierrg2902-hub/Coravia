@@ -171,7 +171,6 @@ export function useElectionData() {
     }
     const base = CACHE[phaseIdx] ?? CACHE[0];
     const lv = liveData.parlamentarias;
-    if (!lv.votosValidos) return base;
     const votes = { ...base.votes };
     PID.forEach((p) => {
       if (lv.votos[p] !== undefined) votes[p] = lv.votos[p]!;
@@ -179,9 +178,9 @@ export function useElectionData() {
     return {
       ...base,
       votes,
-      vv: lv.votosValidos || base.vv,
-      bl: lv.blancos || base.bl,
-      nl: lv.nulos || base.nl,
+      vv: lv.votosValidos ?? base.vv,
+      bl: lv.blancos ?? base.bl,
+      nl: lv.nulos ?? base.nl,
       mc: liveData.metadata.mesasContadas || base.mc,
       pct: liveData.metadata.escrutinadoPct || base.pct,
     };

@@ -34,7 +34,7 @@ function getRegionLeader(regionId: RegionId): { color: string; party: string } |
     .sort(([, a], [, b]) => b - a)[0];
   if (!top) return null;
   const cand = region.govCands.find((c) => c.id === top[0]);
-  return cand ? { color: CLR[cand.party], party: cand.party } : null;
+  return cand ? { color: CLR[cand.party] ?? "#888888", party: cand.party } : null;
 }
 
 export default function CoraviaMap({ selectedRegion, onRegionSelect }: Props) {

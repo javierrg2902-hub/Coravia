@@ -11,7 +11,11 @@ export const metadata: Metadata = {
   },
 };
 
-// Content Security Policy (ver comentario en versión anterior para detalles)
+// Content Security Policy vía meta tag.
+// LIMITACIÓN: los navegadores solo aplican un subconjunto de directivas CSP desde
+// meta tags. En particular, connect-src y frame-ancestors son ignorados por spec
+// y requieren cabeceras HTTP (no disponibles en GitHub Pages). Se mantienen en la
+// cadena para documentar la intención y para cuando el hosting pueda enviarlas.
 const CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",

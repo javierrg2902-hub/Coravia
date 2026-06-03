@@ -60,17 +60,25 @@ jobs:
 
       - name: Verificar que no hay secretos en el bundle
         # Busca patrones de secretos reales: tokens de API, claves AWS, tokens JWT largos.
-        # Excluye __SECRET_INTERNALS de React (es parte del framework, no un secreto).
+        # Escanea .js, .html Y .json (incluye out/data/*.json copiados de public/).
+        # La función scan() trata el exit-code 2 de grep (error) como fallo explícito.
         run: |
           FOUND=0
-          # OpenAI / Anthropic API keys
-          grep -rE "sk-[a-zA-Z0-9]{40,}" out/ --include="*.js" --include="*.html" && FOUND=1
-          # AWS Access Key ID
-          grep -rE "AKIA[0-9A-Z]{16}" out/ --include="*.js" --include="*.html" && FOUND=1
-          # Generic high-entropy tokens (Bearer xxxxx... de >32 chars)
-          grep -rE "Bearer [a-zA-Z0-9+/]{32,}" out/ --include="*.js" --include="*.html" && FOUND=1
-          # GitHub tokens
-          grep -rE "ghp_[a-zA-Z0-9]{36}" out/ --include="*.js" --include="*.html" && FOUND=1
+          scan() {
+            local pattern="$1"
+            grep -rEq "$pattern" out/ \
+              --include="*.js" --include="*.html" --include="*.json" 2>/dev/null
+            local rc=$?
+            if [ $rc -eq 2 ]; then
+              echo "❌ Error interno de grep con patrón: $pattern"
+              exit 2
+            fi
+            [ $rc -eq 0 ] && FOUND=1
+          }
+          scan "sk-[a-zA-Z0-9]{40,}"
+          scan "AKIA[0-9A-Z]{16}"
+          scan "Bearer [a-zA-Z0-9+/]{32,}"
+          scan "ghp_[a-zA-Z0-9]{36}"
           if [ $FOUND -eq 1 ]; then
             echo "⛔ Secretos reales detectados en el bundle."
             exit 1

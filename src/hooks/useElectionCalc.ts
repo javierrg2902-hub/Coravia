@@ -19,7 +19,7 @@ export function useElectionCalc(phaseData: PhaseData) {
         v: phaseData.votes[p] ?? 0,
         s: seats[p] ?? 0,
         pct: phaseData.vv ? ((phaseData.votes[p] ?? 0) / phaseData.vv) * 100 : 0,
-      })).sort((a, b) => b.v - a.v),
+      })).sort((a, b) => b.v - a.v || a.p.localeCompare(b.p)),
     [phaseData.votes, phaseData.vv, seats]
   );
 

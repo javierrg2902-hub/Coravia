@@ -33,12 +33,11 @@ function CustomTooltip({ active, payload, label }: TooltipProps) {
 
 export default function ElectionComparison({ elections }: Props) {
   const chartData = PID
-    .filter((p) => elections.some((e) => (e.votosPct[p] ?? 0) > 0.01))
+    .filter((p) => elections.some((e) => (e.votosPct[p] ?? 0) > 1))
     .map((p) => {
       const row: Record<string, string | number> = { partido: p };
       elections.forEach((e) => {
-        const pct = e.votosPct[p] ?? 0;
-        row[String(e.year)] = pct * (e.year < 2026 ? 100 : 1);
+        row[String(e.year)] = e.votosPct[p] ?? 0;
       });
       return row;
     })

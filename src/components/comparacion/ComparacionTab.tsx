@@ -4,21 +4,51 @@ import { useState, useEffect } from "react";
 import ElectionComparison from "./ElectionComparison";
 import type { HistoricalDataJson, HistoricalElectionResult } from "@/types/election";
 import { CACHE } from "@/data/phases";
-import { PID, CLR, NOM } from "@/data/parties";
+import { PID, CLR } from "@/data/parties";
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "/Coravia";
+const MAX_HIST_BYTES = 50_000;
+const DANGEROUS_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
+function hasNoDangerousKeys(obj: unknown): boolean {
+  if (typeof obj !== "object" || obj === null) return true;
+  for (const key of Object.keys(obj as object)) {
+    if (DANGEROUS_KEYS.has(key)) return false;
+    if (!hasNoDangerousKeys((obj as Record<string, unknown>)[key])) return false;
+  }
+  return true;
+}
 
 export default function ComparacionTab() {
   const [historical, setHistorical] = useState<HistoricalElectionResult[]>([]);
+  const [histError, setHistError] = useState(false);
 
   useEffect(() => {
+    let active = true;
     fetch(`${BASE}/data/elecciones-anteriores.json`)
-      .then((r) => r.json())
-      .then((data: HistoricalDataJson) => setHistorical(data.elecciones))
-      .catch(() => {});
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const text = await r.text();
+        if (text.length > MAX_HIST_BYTES) throw new Error("Respuesta demasiado grande");
+        const raw: unknown = JSON.parse(text);
+        if (!hasNoDangerousKeys(raw)) throw new Error("Datos inválidos");
+        const data = raw as HistoricalDataJson;
+        // Normalize votosPct from fractions (0.21) to percentages (21.0) so display
+        // components can use raw values without year-based scaling heuristics.
+        const normalized = Array.isArray(data.elecciones)
+          ? data.elecciones.map((y) => ({
+              ...y,
+              votosPct: Object.fromEntries(
+                Object.entries(y.votosPct).map(([k, v]) => [k, (v as number) * 100])
+              ) as Record<string, number>,
+            }))
+          : [];
+        if (active) { setHistorical(normalized); setHistError(false); }
+      })
+      .catch(() => { if (active) setHistError(true); });
+    return () => { active = false; };
   }, []);
 
-  // Datos actuales (última fase disponible)
   const currentPhase = CACHE[CACHE.length - 1];
   const totalVotos = currentPhase.vv || 1;
   const currentPct: Partial<Record<string, number>> = {};
@@ -48,11 +78,17 @@ export default function ComparacionTab() {
         </div>
       </div>
 
+      {histError && (
+        <div className="card border-yellow-800/50 bg-yellow-900/10 p-3 text-xs text-yellow-300 flex items-center gap-2">
+          <span>⚠️</span>
+          <span>No se pudieron cargar los datos históricos. Mostrando solo 2026.</span>
+        </div>
+      )}
+
       {allYears.length > 0 && (
         <ElectionComparison elections={allYears} />
       )}
 
-      {/* Tabla comparativa */}
       <div className="card p-4">
         <div className="label-sm mb-3">Variación de voto por partido</div>
         <div className="overflow-x-auto">
@@ -70,7 +106,7 @@ export default function ComparacionTab() {
             </thead>
             <tbody>
               {PID.map((p) => {
-                const vals = allYears.map((y) => (y.votosPct[p] ?? 0) * (y.year < 2026 ? 100 : 1));
+                const vals = allYears.map((y) => y.votosPct[p] ?? 0);
                 const first = vals[0] ?? 0;
                 const last = vals[vals.length - 1] ?? 0;
                 const delta = last - first;
@@ -87,8 +123,12 @@ export default function ComparacionTab() {
                         {v.toFixed(1)}%
                       </td>
                     ))}
-                    <td className={`text-right py-2 px-3 tabular-nums font-bold ${delta > 0 ? "text-green-400" : delta < 0 ? "text-red-400" : "text-slate-500"}`}>
-                      {delta > 0 ? "+" : ""}{delta.toFixed(1)}pp
+                    <td className={`text-right py-2 px-3 tabular-nums font-bold ${
+                      histError
+                        ? "text-slate-600"
+                        : delta > 0 ? "text-green-400" : delta < 0 ? "text-red-400" : "text-slate-500"
+                    }`}>
+                      {histError ? "N/A" : `${delta > 0 ? "+" : ""}${delta.toFixed(1)}pp`}
                     </td>
                   </tr>
                 );

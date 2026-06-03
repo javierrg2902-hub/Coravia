@@ -64,7 +64,7 @@ const REGION_LIST: Omit<RegionData, "seats">[] = [
       { id: "herrera", name: "Pablo Herrera",   party: "PLP",  color: "#03427b" },
       { id: "jimenez", name: "Elena Jiménez",   party: "DC",   color: "#377fcb" },
     ],
-    partyPct: { PLP:.28, PC:.22, DC:.18, PM:.05, MD:.01, PL:.04, PAC:.02, PAN:.015, MORENA:.05, RC:.10, FPLN:.005, PBG:.00, EP:.03 },
+    partyPct: { PLP:.30, PC:.18, DC:.22, PM:.07, MD:.02, PL:.03, PAC:.01, PAN:.04, MORENA:.03, RC:.05, FPLN:.005, PBG:.005, EP:.01 },
     govPct: { herrera: .48, jimenez: .40, blank: .09, null: .03 },
   },
   {
