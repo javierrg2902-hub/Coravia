@@ -2,7 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+/* Fuente del sistema — Inter está instalada nativamente en Windows 11, macOS 10.15+
+   e iOS 13+. En sistemas sin ella, Segoe UI o system-ui son equivalentes visuales.
+   Eliminamos la dependencia de Google Fonts para evitar filtrar la IP del visitante
+   a un tercero y cumplir el CSP sin origen externo en font-src. */
 
 :root {
   --bg-page: #060f1e;

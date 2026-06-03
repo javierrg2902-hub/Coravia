@@ -1,0 +1,32 @@
+name: Análisis de seguridad
+
+on:
+  schedule:
+    # Ejecuta todos los lunes a las 07:00 UTC para detectar nuevas CVE en dependencias
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-audit:
+    name: Auditoría de dependencias
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Auditoría completa (incluyendo devDependencies)
+        run: npm audit --audit-level=moderate
+        continue-on-error: true   # Genera informe pero no bloquea
+
+      - name: Auditoría de producción (bloquea en HIGH)
+        run: npm audit --audit-level=high --omit=dev
