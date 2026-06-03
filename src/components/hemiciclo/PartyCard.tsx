@@ -24,36 +24,36 @@ export default function PartyCard({
     <motion.button
       animate={{ opacity: isHighlighted ? 1 : 0.35 }}
       transition={{ duration: 0.15 }}
-      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.97 }}
       onClick={onClick}
       onMouseEnter={() => onHover(p)}
       onMouseLeave={() => onHover(null)}
+      /* min-h-[52px] garantiza el mínimo de 44px de toque con padding */
       className={`
-        w-full text-left p-2 rounded border transition-all
+        w-full text-left p-2.5 rounded border transition-all min-h-[52px]
         ${isSelected
           ? "border-yellow-400 bg-[#1e3a5f]"
           : "border-[#1e3a5f] bg-[#0c1e3a] hover:border-slate-500"
         }
       `}
     >
-      <div className="flex items-center justify-between gap-1 mb-1">
+      <div className="flex items-center justify-between gap-1 mb-1.5">
         <span
-          className="text-[11px] font-black uppercase"
+          className="text-xs font-black uppercase"
           style={{ color }}
         >
           {p}
         </span>
-        <span className="text-lg font-black text-slate-100 tabular-nums leading-none">
-          {seats}
-        </span>
+        <span className="text-xl font-black text-slate-100 tabular-nums leading-none">{seats}</span>
       </div>
-      <div className="text-[9px] text-slate-500 truncate mb-1">{NOM[p]}</div>
+      {/* Nombre completo — mínimo 11px para legibilidad */}
+      <div className="text-[11px] text-slate-500 leading-tight mb-1.5 line-clamp-2">{NOM[p]}</div>
       <div className="flex items-center justify-between">
-        <span className="text-[10px] text-slate-400">{pct.toFixed(1)}%</span>
-        <span className="text-[8px] text-slate-500">{specLabel(SPECTR[p])}</span>
+        <span className="text-[11px] text-slate-300 font-semibold">{pct.toFixed(1)}%</span>
+        <span className="text-[10px] text-slate-500 hidden sm:inline">{specLabel(SPECTR[p])}</span>
       </div>
       {/* Mini barra */}
-      <div className="mt-1 h-0.5 w-full bg-[#1e3a5f] rounded-full overflow-hidden">
+      <div className="mt-1.5 h-1 w-full bg-[#1e3a5f] rounded-full overflow-hidden">
         <motion.div
           className="h-full rounded-full"
           style={{ backgroundColor: color }}

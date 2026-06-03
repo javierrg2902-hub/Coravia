@@ -1,0 +1,22 @@
+{
+  "name": "Coravia 2026 · Escrutinio Electoral",
+  "short_name": "Coravia 2026",
+  "description": "Portal oficial de resultados electorales de la República de Coravia — Elecciones Generales 2026",
+  "start_url": "/Coravia/",
+  "scope": "/Coravia/",
+  "display": "standalone",
+  "background_color": "#060f1e",
+  "theme_color": "#0a1628",
+  "orientation": "any",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/Coravia/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["news", "government"],
+  "screenshots": []
+}

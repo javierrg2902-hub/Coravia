@@ -11,22 +11,19 @@ export const metadata: Metadata = {
   },
 };
 
-// Content Security Policy — lista explícita de lo que puede cargar la página.
-// 'unsafe-inline' y 'unsafe-eval' en script-src son requeridos por Next.js en
-// modo static export para los scripts de hidratación del cliente. Eliminamos
-// cualquier otro origen externo para minimizar la superficie de ataque.
+// Content Security Policy (ver comentario en versión anterior para detalles)
 const CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
-  "connect-src 'self'",                   // solo puede hacer fetch a /Coravia/data/*.json
-  "frame-ancestors 'none'",               // bloquea incrustar la página en iframes (clickjacking)
+  "connect-src 'self'",
+  "frame-ancestors 'none'",
   "base-uri 'self'",
-  "form-action 'none'",                   // no hay formularios que envíen datos
-  "object-src 'none'",                    // bloquea Flash/plugins
-  "upgrade-insecure-requests",            // fuerza HTTPS en todos los recursos
+  "form-action 'none'",
+  "object-src 'none'",
+  "upgrade-insecure-requests",
 ].join("; ");
 
 export default function RootLayout({
@@ -38,13 +35,28 @@ export default function RootLayout({
     <html lang="es">
       <head>
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+        {/* viewport: user-scalable=no omitido intencionalmente — la accesibilidad
+            requiere permitir zoom al usuario (WCAG 1.4.4) */}
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-        {/* ── Cabeceras de seguridad como meta tags ─────────────────────────────
-            GitHub Pages no permite cabeceras HTTP personalizadas, por lo que
-            las declaramos aquí. Aunque tienen menos peso que las cabeceras HTTP
-            reales, sí son respetadas por los navegadores modernos.
-        */}
+        {/* ── PWA / Instalación en móvil ─────────────────────────────────────── */}
+        <link rel="manifest" href="/Coravia/manifest.json" />
+        <meta name="theme-color" content="#0a1628" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Coravia 2026" />
+        <link rel="apple-touch-icon" href="/Coravia/icon.svg" />
+        <meta name="mobile-web-app-capable" content="yes" />
+
+        {/* ── Compartir en redes sociales (WhatsApp, Twitter, Telegram) ─────── */}
+        <meta property="og:title" content="Coravia 2026 · Escrutinio Electoral" />
+        <meta property="og:description" content="Sigue los resultados en tiempo real de las Elecciones Generales 2026 de Coravia" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Coravia 2026 · Escrutinio" />
+        <meta name="twitter:description" content="Resultados en tiempo real — República de Coravia" />
+
+        {/* ── Seguridad ─────────────────────────────────────────────────────── */}
         <meta httpEquiv="Content-Security-Policy" content={CSP} />
         <meta httpEquiv="X-Frame-Options" content="DENY" />
         <meta httpEquiv="X-Content-Type-Options" content="nosniff" />

@@ -30,7 +30,7 @@ export default function ElectionDashboard() {
   const {
     phaseIdx, setPhaseIdx,
     activePhaseData, isLive,
-    escrutinadoPct, faseName, lastPolled,
+    escrutinadoPct, faseName, lastPolled, error,
   } = useElectionData();
 
   const { seats, results, totalSeats, countedIds } = useElectionCalc(activePhaseData);
@@ -46,32 +46,42 @@ export default function ElectionDashboard() {
       />
       <TabNav active={activeTab} onChange={setActiveTab} />
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+
+        {/* Error de conexión — solo si falla el polling */}
+        {error && (
+          <div className="card border-yellow-800/50 bg-yellow-900/10 p-3 mb-4 text-xs text-yellow-300 flex items-center gap-2">
+            <span>⚠️</span>
+            <span>No se pudo actualizar: {error}. Mostrando datos anteriores.</span>
+          </div>
+        )}
+
         {/* Selector de fase — visible en todas las pestañas excepto regional y comparación */}
         {activeTab !== "regional" && activeTab !== "comparacion" && (
           <div className="card p-3 mb-4">
+            <div className="label-xs mb-2">Fase de escrutinio</div>
             <PhaseBar phaseIdx={phaseIdx} onChange={setPhaseIdx} />
           </div>
         )}
 
-        {/* Estadísticas globales */}
+        {/* Estadísticas globales rápidas */}
         {(activeTab === "resultados" || activeTab === "hemiciclo") && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
             {([
-              ["Votos válidos",   activePhaseData.vv.toLocaleString("es-ES"), "text-slate-100"],
-              ["Escrutado",       `${escrutinadoPct}%`,                       "text-yellow-400"],
-              ["Mesas contadas",  `${activePhaseData.mc.toLocaleString("es-ES")} / ${TMESAS.toLocaleString("es-ES")}`, "text-slate-300"],
-              ["Escaños asig.",   `${totalSeats} / 25`,                       "text-blue-400"],
+              ["Votos válidos",   activePhaseData.vv.toLocaleString("es-ES"),  "text-slate-100"],
+              ["Escrutado",       `${escrutinadoPct}%`,                        "text-yellow-400"],
+              ["Mesas",           `${activePhaseData.mc.toLocaleString("es-ES")} / ${TMESAS.toLocaleString("es-ES")}`, "text-slate-300"],
+              ["Escaños asig.",   `${totalSeats} / 25`,                        "text-blue-400"],
             ] as [string, string, string][]).map(([label, value, cls]) => (
               <div key={label} className="card p-3 text-center">
-                <div className="label-xs mb-1">{label}</div>
-                <div className={`text-lg font-black ${cls} tabular-nums`}>{value}</div>
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">{label}</div>
+                <div className={`text-base sm:text-lg font-black ${cls} tabular-nums leading-tight`}>{value}</div>
               </div>
             ))}
           </div>
         )}
 
-        {/* Contenido de pestañas con transición */}
+        {/* Transición de pestaña */}
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -80,26 +90,31 @@ export default function ElectionDashboard() {
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.18 }}
           >
+
             {/* ── Resultados ── */}
             {activeTab === "resultados" && (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 <ResultsGrid results={results} />
                 <div className="card p-4">
                   <SeatDistribution seats={seats} />
                 </div>
                 <div className="card p-4">
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between mb-3 gap-2">
                     <div className="label-sm">Gráfico de resultados</div>
+                    {/* Botones con toque mínimo 44px */}
                     <div className="flex gap-1">
                       {(["votos", "escanos"] as const).map((m) => (
                         <button
                           key={m}
                           onClick={() => setChartMode(m)}
-                          className={`px-3 py-1 rounded text-xs font-bold transition-all ${
-                            chartMode === m
+                          aria-pressed={chartMode === m}
+                          className={`
+                            px-4 py-2.5 rounded text-xs font-bold transition-all min-h-[44px]
+                            ${chartMode === m
                               ? "bg-yellow-500 text-black"
                               : "bg-[#0c1e3a] text-slate-400 border border-[#1e3a5f] hover:border-slate-500"
-                          }`}
+                            }
+                          `}
                         >
                           {m === "votos" ? "% Voto" : "Escaños"}
                         </button>
@@ -130,8 +145,10 @@ export default function ElectionDashboard() {
             {/* ── Pactómetro ── */}
             {activeTab === "pactometro" && (
               <div className="card p-4 md:p-6">
-                <div className="label-xs mb-1">Calculadora de coaliciones</div>
-                <div className="text-lg font-black text-slate-100 mb-4">Pactómetro de investidura</div>
+                <div className="label-xs mb-0.5">Calculadora de coaliciones</div>
+                <div className="text-base sm:text-lg font-black text-slate-100 mb-4">
+                  Pactómetro de investidura
+                </div>
                 <Pactometro seats={seats} />
               </div>
             )}
@@ -142,26 +159,23 @@ export default function ElectionDashboard() {
             )}
 
             {/* ── Regional ── */}
-            {activeTab === "regional" && (
-              <RegionalTab />
-            )}
+            {activeTab === "regional" && <RegionalTab />}
 
             {/* ── Comparación ── */}
-            {activeTab === "comparacion" && (
-              <ComparacionTab />
-            )}
+            {activeTab === "comparacion" && <ComparacionTab />}
+
           </motion.div>
         </AnimatePresence>
       </main>
 
       {/* Footer institucional */}
       <footer className="border-t border-[#1e3a5f] mt-12 py-6">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <div className="text-[10px] text-slate-600 uppercase tracking-widest">
-            Portal Oficial de Resultados Electorales · República de Coravia · Elecciones Generales 2026
+        <div className="max-w-7xl mx-auto px-4 text-center space-y-1">
+          <div className="text-xs text-slate-600 uppercase tracking-widest">
+            Portal Oficial de Resultados · República de Coravia · Elecciones Generales 2026
           </div>
-          <div className="text-[9px] text-slate-700 mt-1">
-            Los datos se actualizan automáticamente. Resultados provisionales no definitivos.
+          <div className="text-[11px] text-slate-700">
+            Resultados provisionales no definitivos · Datos se actualizan automáticamente
           </div>
         </div>
       </footer>
