@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { CACHE, PHASES } from "@/data/phases";
 import { PID } from "@/data/parties";
 import type { PhaseData, LiveResultsJson, PartyId } from "@/types/election";
@@ -18,7 +18,7 @@ const MAX_JSON_BYTES = 50_000;
 //   2. Evitar valores numéricos fuera de rango que rompan la UI
 //   3. Garantizar que solo campos esperados modifiquen el estado de la aplicación
 
-const DANGEROUS_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+import { hasNoDangerousKeys } from "@/lib/validation";
 
 function safeString(v: unknown, maxLen = 20): string {
   if (typeof v !== "string") return "";
@@ -31,14 +31,6 @@ function safeNumber(v: unknown, min: number, max: number, fallback: number): num
   return Math.min(max, Math.max(min, n));
 }
 
-function hasNoDangerousKeys(obj: unknown): boolean {
-  if (typeof obj !== "object" || obj === null) return true;
-  for (const key of Object.keys(obj as object)) {
-    if (DANGEROUS_KEYS.has(key)) return false;
-    if (!hasNoDangerousKeys((obj as Record<string, unknown>)[key])) return false;
-  }
-  return true;
-}
 
 function validateLiveResults(raw: unknown): LiveResultsJson | null {
   // Rechazar si no es objeto plano
@@ -57,7 +49,9 @@ function validateLiveResults(raw: unknown): LiveResultsJson | null {
   const modo = meta.modo === "en_vivo" ? "en_vivo" : "simulado";
   const escrutinadoPct = safeString(meta.escrutinadoPct, 10);
   const faseName = safeString(meta.faseName, 5);
-  const mesasContadas = safeNumber(meta.mesasContadas, 0, 999_999, 0);
+  const mesasContadas = (meta.mesasContadas !== undefined && meta.mesasContadas !== null)
+    ? safeNumber(meta.mesasContadas, 0, 999_999, 0)
+    : null;
   const mesasTotal = safeNumber(meta.mesasTotal, 0, 999_999, 0);
   const eleccion = safeString(meta.eleccion, 80);
   const fechaActualizacion = safeString(meta.fechaActualizacion, 30);
@@ -123,6 +117,8 @@ export function useElectionData() {
   const [liveData, setLiveData] = useState<LiveResultsJson | null>(null);
   const [lastPolled, setLastPolled] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Cuando el usuario selecciona manualmente una fase, no sobreescribimos con el poll.
+  const manualPhaseRef = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -147,6 +143,7 @@ export function useElectionData() {
         setLiveData(validated);
         setLastPolled(new Date());
         setPhaseIdx((prev) => {
+          if (manualPhaseRef.current) return prev;
           const incoming = validated.metadata.faseIdx;
           if (incoming >= 0 && incoming < PHASES.length) return incoming;
           return prev;
@@ -191,9 +188,14 @@ export function useElectionData() {
   const escrutinadoPct = liveData?.metadata.escrutinadoPct ?? activePhaseData.pct;
   const faseName = liveData?.metadata.faseName ?? PHASES[phaseIdx]?.n ?? "F1";
 
+  const selectPhase = useCallback((i: number) => {
+    manualPhaseRef.current = true;
+    setPhaseIdx(i);
+  }, []);
+
   return {
     phaseIdx,
-    setPhaseIdx,
+    setPhaseIdx: selectPhase,
     activePhaseData,
     liveData,
     lastPolled,

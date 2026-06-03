@@ -5,21 +5,16 @@ import ElectionComparison from "./ElectionComparison";
 import type { HistoricalDataJson, HistoricalElectionResult } from "@/types/election";
 import { CACHE } from "@/data/phases";
 import { PID, CLR } from "@/data/parties";
+import { hasNoDangerousKeys } from "@/lib/validation";
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "/Coravia";
 const MAX_HIST_BYTES = 50_000;
-const DANGEROUS_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 
-function hasNoDangerousKeys(obj: unknown): boolean {
-  if (typeof obj !== "object" || obj === null) return true;
-  for (const key of Object.keys(obj as object)) {
-    if (DANGEROUS_KEYS.has(key)) return false;
-    if (!hasNoDangerousKeys((obj as Record<string, unknown>)[key])) return false;
-  }
-  return true;
+interface Props {
+  phaseIdx: number;
 }
 
-export default function ComparacionTab() {
+export default function ComparacionTab({ phaseIdx }: Props) {
   const [historical, setHistorical] = useState<HistoricalElectionResult[]>([]);
   const [histError, setHistError] = useState(false);
 
@@ -49,7 +44,7 @@ export default function ComparacionTab() {
     return () => { active = false; };
   }, []);
 
-  const currentPhase = CACHE[CACHE.length - 1];
+  const currentPhase = CACHE[phaseIdx] ?? CACHE[CACHE.length - 1];
   const totalVotos = currentPhase.vv || 1;
   const currentPct: Partial<Record<string, number>> = {};
   PID.forEach((p) => {

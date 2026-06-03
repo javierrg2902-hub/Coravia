@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { annSeg, ARC_R, ARC_THICK, ARC_START, ARC_END, ARC_SPAN, arcPt, ARC_CX, ARC_CY } from "@/lib/electionUtils";
-import { MAJ } from "@/data/phases";
+import { MAJ, SEATS } from "@/data/phases";
 import type { PartyId } from "@/types/election";
 
 interface SegmentData {
@@ -38,7 +38,7 @@ export default function HemicyclePie({
   let cursor = 0;
 
   // Majority line angle
-  const majPct = MAJ / totalSeats;
+  const majPct = MAJ / (totalSeats || SEATS);
   const majDeg = ARC_START - majPct * ARC_SPAN;
   const [mlx1, mly1] = arcPt(ARC_R - ARC_THICK / 2 - 4, majDeg);
   const [mlx2, mly2] = arcPt(ARC_R + ARC_THICK / 2 + 4, majDeg);

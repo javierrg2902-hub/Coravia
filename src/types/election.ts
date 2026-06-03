@@ -71,7 +71,7 @@ export interface LiveResultsJson {
     fechaActualizacion: string;
     faseName: string;
     faseIdx: number;
-    mesasContadas: number;
+    mesasContadas: number | null;
     mesasTotal: number;
     escrutinadoPct: string;
     modo: "simulado" | "en_vivo";
