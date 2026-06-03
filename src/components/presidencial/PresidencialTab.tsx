@@ -13,9 +13,9 @@ export default function PresidencialTab({ phaseIdx, setPhaseIdx }: Props) {
   const totalVotos = Math.round(PRES_TOTAL_PADRON * PRES_PARTICIPACION);
 
   const mainCands = PRES_CANDS.filter((c) => c.party !== null);
-  const leader = mainCands.reduce((a, b) =>
-    (phase[a.id] ?? 0) > (phase[b.id] ?? 0) ? a : b
-  );
+  const leader = mainCands.length
+    ? mainCands.reduce((a, b) => (phase[a.id] ?? 0) >= (phase[b.id] ?? 0) ? a : b)
+    : PRES_CANDS[0];
 
   return (
     <div className="space-y-6">

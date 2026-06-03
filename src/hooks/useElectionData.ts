@@ -175,13 +175,14 @@ export function useElectionData() {
     PID.forEach((p) => {
       if (lv.votos[p] !== undefined) votes[p] = lv.votos[p]!;
     });
+    if (lv.votosValidos === 0) return base;
     return {
       ...base,
       votes,
-      vv: lv.votosValidos ?? base.vv,
+      vv: lv.votosValidos,
       bl: lv.blancos ?? base.bl,
       nl: lv.nulos ?? base.nl,
-      mc: liveData.metadata.mesasContadas || base.mc,
+      mc: liveData.metadata.mesasContadas ?? base.mc,
       pct: liveData.metadata.escrutinadoPct || base.pct,
     };
   }, [phaseIdx, liveData]);

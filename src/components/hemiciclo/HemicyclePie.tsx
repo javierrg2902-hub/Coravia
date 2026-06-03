@@ -38,7 +38,7 @@ export default function HemicyclePie({
   let cursor = 0;
 
   // Majority line angle
-  const majPct = MAJ / total;
+  const majPct = MAJ / totalSeats;
   const majDeg = ARC_START - majPct * ARC_SPAN;
   const [mlx1, mly1] = arcPt(ARC_R - ARC_THICK / 2 - 4, majDeg);
   const [mlx2, mly2] = arcPt(ARC_R + ARC_THICK / 2 + 4, majDeg);

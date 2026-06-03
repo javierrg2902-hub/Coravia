@@ -27,7 +27,7 @@ export default function SeatDistribution({ seats }: Props) {
     <div>
       <div className="label-sm mb-3">Distribución de escaños — Ley D&apos;Hondt</div>
       {/* Franja de escaños */}
-      <div className="flex gap-px h-8 rounded overflow-hidden mb-3">
+      <div className="relative flex gap-px h-8 rounded overflow-hidden mb-3">
         {order.map((p, i) => (
           <motion.div
             key={`${p}-${seatNums[i]}`}

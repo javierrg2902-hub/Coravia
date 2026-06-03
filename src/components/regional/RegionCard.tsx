@@ -4,7 +4,6 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { CLR, NOM, PID } from "@/data/parties";
-import { dhondt5 } from "@/lib/dhondt";
 import type { RegionData } from "@/types/election";
 
 interface Props {
@@ -25,7 +24,7 @@ export default function RegionCard({ region, isSelected, onClick }: Props) {
     .map((p) => ({ name: p, value: (region.partyPct[p] ?? 0) * 100, color: CLR[p] }))
     .sort((a, b) => b.value - a.value);
 
-  const seats = dhondt5(region.partyPct);
+  const seats = region.seats;
   const seatsEntries = PID.filter((p) => (seats[p] || 0) > 0).map((p) => ({ p, n: seats[p] }));
 
   return (

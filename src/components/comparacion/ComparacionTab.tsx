@@ -39,7 +39,7 @@ export default function ComparacionTab() {
           ? data.elecciones.map((y) => ({
               ...y,
               votosPct: Object.fromEntries(
-                Object.entries(y.votosPct).map(([k, v]) => [k, (v as number) * 100])
+                Object.entries(y.votosPct).map(([k, v]) => { const n = v as number; return [k, n > 1 ? n : n * 100]; })
               ) as Record<string, number>,
             }))
           : [];
