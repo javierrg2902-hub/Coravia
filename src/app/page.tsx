@@ -126,7 +126,7 @@ export default function ElectionDashboard() {
                 </div>
                 <div className="card p-4">
                   <div className="label-sm mb-3">Tabla completa de resultados</div>
-                  <ResultsTable results={results} totalVotos={activePhaseData.vv} />
+                  <ResultsTable results={results} totalVotos={activePhaseData.vv} blancos={activePhaseData.bl} nulos={activePhaseData.nl} />
                 </div>
               </div>
             )}

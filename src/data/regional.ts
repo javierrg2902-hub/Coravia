@@ -73,7 +73,7 @@ const REGION_LIST: Omit<RegionData, "seats">[] = [
       { id: "espinoza",name: "Marco Espinoza",  party: "PC",     color: "#0053b4" },
     ],
     partyPct: { PLP:.32, PC:.18, DC:.23, PM:.07, MD:.02, PL:.03, PAC:.01, PAN:.04, MORENA:.03, RC:.05, FPLN:.005, PBG:.005, EP:.01 },
-    govPct: { herrera: .52, jimenez: .33, espinoza: .09, blank: .05, null: .01 },
+    govPct: { herrera: .46, jimenez: .33, espinoza: .14, blank: .05, null: .02 },
   },
   {
     id: "E8", name: "Río Bravo", padron: 1389000,
