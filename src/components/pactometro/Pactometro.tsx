@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import HemicyclePie from "@/components/hemiciclo/HemicyclePie";
 import { CLR, NOM, SPECTR } from "@/data/parties";
 import { PID } from "@/data/parties";
@@ -39,6 +40,10 @@ const STANCE_CONFIG: { stance: CoalitionStance; label: string; shortLabel: strin
 
 export default function Pactometro({ seats }: Props) {
   const [stances, setStances] = useState<StanceMap>({});
+  const [hoveredParty, setHoveredParty] = useState<PartyId | null>(null);
+  const [selectedParty, setSelectedParty] = useState<PartyId | null>(null);
+
+  const activeParty = selectedParty ?? hoveredParty;
 
   const withSeats = PID
     .filter((p) => (seats[p] || 0) > 0)
@@ -54,6 +59,14 @@ export default function Pactometro({ seats }: Props) {
 
   function toggle(p: PartyId, stance: CoalitionStance) {
     setStances((prev) => ({ ...prev, [p]: prev[p] === stance ? undefined : stance }));
+  }
+
+  function handleSegmentClick(p: PartyId) {
+    setSelectedParty((prev) => prev === p ? null : p);
+  }
+
+  function handleRowClick(p: PartyId) {
+    setSelectedParty((prev) => prev === p ? null : p);
   }
 
   const hemData = withSeats.map((p) => ({
@@ -88,6 +101,9 @@ export default function Pactometro({ seats }: Props) {
             centerSub1={favor > 0 ? "a favor" : "sin asignar"}
             centerSub2={`Mayoría: ${MAJ}`}
             showMaj
+            highlightParty={activeParty}
+            onSegmentHover={setHoveredParty}
+            onSegmentClick={handleSegmentClick}
           />
 
           {/* Resumen de votos */}
@@ -123,50 +139,121 @@ export default function Pactometro({ seats }: Props) {
           )}
         </div>
 
-        {/* ── Controles por partido ── */}
-        <div className="space-y-2">
-          <div className="label-sm mb-3">Asignar posición de cada partido</div>
-          {withSeats.map((p) => {
-            const stance = stances[p];
-            return (
-              <div key={p} className="card-inner p-3 flex items-center gap-2">
-                {/* Info del partido */}
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-[10px] font-black flex-shrink-0"
-                    style={{ background: CLR[p] }}
-                    aria-hidden="true"
-                  >
-                    {p}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-slate-200 truncate">{NOM[p]}</div>
-                    <div className="text-[11px] text-slate-500">{seats[p]} esc.</div>
-                  </div>
-                </div>
-
-                {/* Botones de postura — mínimo 44px de alto, texto legible */}
-                <div className="flex gap-1 flex-shrink-0">
-                  {STANCE_CONFIG.map(({ stance: s, shortLabel, activeClass, inactiveClass }) => (
-                    <button
-                      key={s}
-                      onClick={() => toggle(p, s)}
-                      aria-pressed={stance === s}
-                      aria-label={`${p}: ${s}`}
-                      /* min-w y h-11 garantizan 44×44px de toque */
-                      className={`
-                        min-w-[44px] h-11 px-1 text-[10px] font-black rounded-lg border
-                        transition-all leading-tight
-                        ${stance === s ? activeClass : inactiveClass}
-                      `}
+        {/* ── Panel derecho: detalle + lista de partidos ── */}
+        <div>
+          {/* Panel animado de partido seleccionado */}
+          <AnimatePresence>
+            {selectedParty && (
+              <motion.div
+                key={selectedParty}
+                initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                animate={{ opacity: 1, height: "auto", marginBottom: 12 }}
+                exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                className="overflow-hidden"
+              >
+                <div
+                  className="card-inner p-4 border-l-4"
+                  style={{ borderLeftColor: CLR[selectedParty] }}
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-xs font-black flex-shrink-0"
+                      style={{ background: CLR[selectedParty] }}
                     >
-                      {shortLabel}
+                      {selectedParty}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-slate-100 truncate">{NOM[selectedParty]}</div>
+                      <div className="text-xs text-slate-400">{seats[selectedParty]} escaños</div>
+                    </div>
+                    <button
+                      onClick={() => setSelectedParty(null)}
+                      className="text-slate-500 hover:text-slate-200 text-xl leading-none flex-shrink-0 transition-colors"
+                      aria-label="Cerrar panel"
+                    >
+                      ×
                     </button>
-                  ))}
+                  </div>
+                  <div className="flex gap-2">
+                    {STANCE_CONFIG.map(({ stance: s, label, activeClass, inactiveClass }) => (
+                      <button
+                        key={s}
+                        onClick={() => toggle(selectedParty, s)}
+                        aria-pressed={stances[selectedParty] === s}
+                        className={`
+                          flex-1 py-2.5 text-xs font-black rounded-lg border transition-all
+                          ${stances[selectedParty] === s ? activeClass : inactiveClass}
+                        `}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Lista de partidos */}
+          <div className="label-sm mb-3">
+            {activeParty
+              ? <span>Haz clic en un segmento o partido para fijar</span>
+              : <span>Asignar posición de cada partido</span>
+            }
+          </div>
+          <div className="space-y-2">
+            {withSeats.map((p) => {
+              const stance = stances[p];
+              const isActive = activeParty === p;
+              const isDimmed = activeParty !== null && !isActive;
+              return (
+                <motion.div
+                  key={p}
+                  animate={{ opacity: isDimmed ? 0.3 : 1 }}
+                  transition={{ duration: 0.15 }}
+                  className="card-inner p-3 flex items-center gap-2 cursor-pointer"
+                  style={isActive ? { outline: `2px solid ${CLR[p]}`, outlineOffset: "-2px" } : undefined}
+                  onClick={() => handleRowClick(p)}
+                  onMouseEnter={() => !selectedParty && setHoveredParty(p)}
+                  onMouseLeave={() => !selectedParty && setHoveredParty(null)}
+                >
+                  {/* Info del partido */}
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <div
+                      className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-[10px] font-black flex-shrink-0"
+                      style={{ background: CLR[p] }}
+                      aria-hidden="true"
+                    >
+                      {p}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-slate-200 truncate">{NOM[p]}</div>
+                      <div className="text-[11px] text-slate-500">{seats[p]} esc.</div>
+                    </div>
+                  </div>
+
+                  {/* Botones de postura */}
+                  <div className="flex gap-1 flex-shrink-0">
+                    {STANCE_CONFIG.map(({ stance: s, shortLabel, activeClass, inactiveClass }) => (
+                      <button
+                        key={s}
+                        onClick={(e) => { e.stopPropagation(); toggle(p, s); }}
+                        aria-pressed={stance === s}
+                        aria-label={`${p}: ${s}`}
+                        className={`
+                          min-w-[44px] h-11 px-1 text-[10px] font-black rounded-lg border
+                          transition-all leading-tight
+                          ${stance === s ? activeClass : inactiveClass}
+                        `}
+                      >
+                        {shortLabel}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

@@ -12,10 +12,16 @@ export default function PresidencialTab({ phaseIdx, setPhaseIdx }: Props) {
   const phase = PRES_BY_PHASE[phaseIdx] ?? PRES_BY_PHASE[0];
   const totalVotos = Math.round(PRES_TOTAL_PADRON * PRES_PARTICIPACION);
 
-  const mainCands = PRES_CANDS.filter((c) => c.party !== null);
-  const leader = mainCands.length
-    ? mainCands.reduce((a, b) => (phase[a.id] ?? 0) >= (phase[b.id] ?? 0) ? a : b)
+  const nonNullCands = PRES_CANDS.filter((c) => c.party !== null);
+  const leader = nonNullCands.length
+    ? nonNullCands.reduce((a, b) => (phase[a.id] ?? 0) >= (phase[b.id] ?? 0) ? a : b)
     : PRES_CANDS[0];
+
+  const hasAbsoluteMajority = (phase[leader.id] ?? 0) > 0.50;
+  const top2 = [...nonNullCands]
+    .sort((a, b) => (phase[b.id] ?? 0) - (phase[a.id] ?? 0))
+    .slice(0, 2);
+  const top2Ids = new Set(top2.map((c) => c.id));
 
   return (
     <div className="space-y-6">
@@ -28,7 +34,7 @@ export default function PresidencialTab({ phaseIdx, setPhaseIdx }: Props) {
             ["Padrón electoral",       PRES_TOTAL_PADRON.toLocaleString("es-ES")],
             ["Participación estimada", `${(PRES_PARTICIPACION * 100).toFixed(0)}%`],
             ["Votos totales",          totalVotos.toLocaleString("es-ES")],
-            ["Candidatos",             String(mainCands.length)],
+            ["Candidatos",             String(nonNullCands.length)],
           ] as [string, string][]).map(([l, v]) => (
             <div key={l} className="card-inner p-3 text-center">
               <div className="label-xs mb-1">{l}</div>
@@ -38,29 +44,57 @@ export default function PresidencialTab({ phaseIdx, setPhaseIdx }: Props) {
         </div>
       </div>
 
-      {/* Banner del candidato líder */}
-      <div
-        className="card p-4 flex items-center gap-4 border-l-4"
-        style={{ borderLeftColor: leader.color }}
-      >
+      {/* Banner de resultado electoral */}
+      {hasAbsoluteMajority ? (
         <div
-          className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-black text-sm flex-shrink-0"
-          style={{ background: leader.color }}
+          className="card p-4 flex items-center gap-4 border-l-4 bg-green-500/5"
+          style={{ borderLeftColor: leader.color }}
         >
-          {leader.party}
-        </div>
-        <div className="flex-1">
-          <div className="label-xs mb-0.5">Candidato líder</div>
-          <div className="text-lg font-black text-slate-100">{leader.name}</div>
-          <div className="text-xs text-slate-400">{leader.party}</div>
-        </div>
-        <div className="text-right">
-          <div className="text-3xl font-black" style={{ color: leader.color }}>
-            {((phase[leader.id] ?? 0) * 100).toFixed(1)}%
+          <div
+            className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-black text-sm flex-shrink-0"
+            style={{ background: leader.color }}
+          >
+            {leader.party}
           </div>
-          <div className="text-xs text-slate-500">del voto</div>
+          <div className="flex-1">
+            <div className="label-xs mb-0.5 text-green-400">✅ Elegido en primera vuelta</div>
+            <div className="text-lg font-black text-slate-100">{leader.name}</div>
+            <div className="text-xs text-slate-400">{leader.party}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-3xl font-black text-green-400">
+              {((phase[leader.id] ?? 0) * 100).toFixed(1)}%
+            </div>
+            <div className="text-xs text-slate-500">del voto</div>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="card p-4 border-l-4 border-yellow-500 bg-yellow-500/5">
+          <div className="label-xs mb-2 text-yellow-400">⚠️ Segunda vuelta — Balotaje</div>
+          <div className="text-xs text-slate-400 mb-3">
+            Ningún candidato obtuvo el 50%+1. Los dos más votados pasan a segunda vuelta:
+          </div>
+          <div className="flex gap-3">
+            {top2.map((c, i) => (
+              <div key={c.id} className="flex-1 flex items-center gap-2 card-inner p-3">
+                <div className="text-lg font-black text-yellow-400 flex-shrink-0">{i + 1}º</div>
+                <div
+                  className="w-8 h-8 rounded flex items-center justify-center text-white text-[10px] font-black flex-shrink-0"
+                  style={{ background: c.color }}
+                >
+                  {c.party}
+                </div>
+                <div className="min-w-0">
+                  <div className="font-bold text-slate-100 text-sm truncate">{c.name}</div>
+                  <div className="text-yellow-400 font-black text-sm">
+                    {((phase[c.id] ?? 0) * 100).toFixed(1)}%
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Barras de candidatos */}
       <div className="space-y-3">
@@ -68,8 +102,14 @@ export default function PresidencialTab({ phaseIdx, setPhaseIdx }: Props) {
         {PRES_CANDS.map((cand) => {
           const pct = (phase[cand.id] ?? 0) * 100;
           const votes = Math.round(totalVotos * (phase[cand.id] ?? 0));
+          const isWinner = hasAbsoluteMajority && cand.id === leader.id;
+          const advancesToBalotaje = !hasAbsoluteMajority && cand.party !== null && top2Ids.has(cand.id);
+          const isEliminated = cand.party !== null && !isWinner && !advancesToBalotaje;
           return (
-            <div key={cand.id} className="card p-4">
+            <div
+              key={cand.id}
+              className={`card p-4 transition-opacity duration-300 ${isEliminated ? "opacity-50" : "opacity-100"}`}
+            >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                   {cand.party && (
@@ -83,7 +123,15 @@ export default function PresidencialTab({ phaseIdx, setPhaseIdx }: Props) {
                   <div>
                     <div className="font-bold text-slate-200 text-sm">{cand.name}</div>
                     {cand.party && (
-                      <div className="text-[10px] text-slate-500">{cand.party}</div>
+                      <div className="text-[10px] text-slate-500 flex items-center gap-1.5">
+                        <span>{cand.party}</span>
+                        {isWinner && (
+                          <span className="text-green-400 font-bold">✅ Elegido</span>
+                        )}
+                        {advancesToBalotaje && (
+                          <span className="text-yellow-400 font-bold">→ Balotaje</span>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
