@@ -21,6 +21,7 @@ interface Props {
   onSegmentHover?: (p: PartyId | null) => void;
   onSegmentClick?: (p: PartyId) => void;
   showMaj?: boolean;
+  majorityCount?: number;
 }
 
 export default function HemicyclePie({
@@ -33,12 +34,14 @@ export default function HemicyclePie({
   onSegmentHover,
   onSegmentClick,
   showMaj = true,
+  majorityCount,
 }: Props) {
   const total = data.reduce((s, d) => s + (d.value || 0), 0) || 1;
   let cursor = 0;
 
   // Majority line angle
-  const majPct = MAJ / (totalSeats || SEATS);
+  const effectiveMaj = majorityCount ?? MAJ;
+  const majPct = effectiveMaj / (totalSeats || SEATS);
   const majDeg = ARC_START - majPct * ARC_SPAN;
   const [mlx1, mly1] = arcPt(ARC_R - ARC_THICK / 2 - 4, majDeg);
   const [mlx2, mly2] = arcPt(ARC_R + ARC_THICK / 2 + 4, majDeg);
@@ -88,7 +91,7 @@ export default function HemicyclePie({
             x={mlx2 + 3} y={mly2 + 3}
             fontSize="7" fill="#EAB308" fontWeight="bold"
           >
-            {MAJ}
+            {effectiveMaj}
           </text>
         </g>
       )}
@@ -117,7 +120,7 @@ export default function HemicyclePie({
       {showMaj && (
         <text x={ARC_CX} y={203} textAnchor="middle"
           fontSize="7" fill="#475569">
-          Mayoría absoluta: {MAJ} escaños
+          Mayoría absoluta: {effectiveMaj} escaños
         </text>
       )}
     </svg>

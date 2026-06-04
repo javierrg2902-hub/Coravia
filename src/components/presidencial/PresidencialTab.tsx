@@ -1,14 +1,50 @@
 "use client";
 
+import { useState } from "react";
 import { PRES_CANDS, PRES_BY_PHASE, PRES_TOTAL_PADRON, PRES_PARTICIPACION } from "@/data/presidential";
+import { PRES_BY_REGION, getPresRegionVotes, getPresDistrictResults } from "@/data/presRegional";
+import { REGION_DATA } from "@/data/regional";
 import PhaseBar from "@/components/scrutiny/PhaseBar";
+import type { RegionId } from "@/types/election";
 
 interface Props {
   phaseIdx: number;
   setPhaseIdx: (i: number) => void;
 }
 
+const CAND_COLORS: Record<string, string> = {
+  vinyas:  "#03427b",
+  calleja: "#7a0000",
+  santos:  "#00abff",
+  blank:   "#AAAAAA",
+  null:    "#777777",
+};
+
+const CAND_NAMES: Record<string, string> = {
+  vinyas:  "Rodrigo Vinyas",
+  calleja: "María Calleja",
+  santos:  "Héctor Santos",
+  blank:   "En blanco",
+  null:    "Nulos",
+};
+
+const DISPLAY_CANDS = ["vinyas", "calleja", "santos"] as const;
+
+const REGION_LABELS: Record<RegionId, string> = {
+  E1: "DF Monteblanco",
+  E2: "Florente",
+  E3: "Litoral",
+  E4: "Palmdale",
+  E5: "Sta. Catalina",
+  E6: "Castellón",
+  E7: "Alcalá",
+  E8: "Río Bravo",
+};
+
 export default function PresidencialTab({ phaseIdx, setPhaseIdx }: Props) {
+  const [presDistFilter, setPresDistFilter] = useState<string>("all");
+  const [showAllDistricts, setShowAllDistricts] = useState(false);
+
   const phase = PRES_BY_PHASE[phaseIdx] ?? PRES_BY_PHASE[0];
   const totalVotos = Math.round(PRES_TOTAL_PADRON * PRES_PARTICIPACION);
 
@@ -22,6 +58,14 @@ export default function PresidencialTab({ phaseIdx, setPhaseIdx }: Props) {
     .sort((a, b) => (phase[b.id] ?? 0) - (phase[a.id] ?? 0))
     .slice(0, 2);
   const top2Ids = new Set(top2.map((c) => c.id));
+
+  // District results
+  const allDistrictResults = getPresDistrictResults()
+    .sort((a, b) => b.tv - a.tv);
+  const filteredDistricts = presDistFilter === "all"
+    ? allDistrictResults
+    : allDistrictResults.filter((d) => d.regionId === presDistFilter);
+  const displayedDistricts = showAllDistricts ? filteredDistricts : filteredDistricts.slice(0, 30);
 
   return (
     <div className="space-y-6">
@@ -153,6 +197,128 @@ export default function PresidencialTab({ phaseIdx, setPhaseIdx }: Props) {
             </div>
           );
         })}
+      </div>
+
+      {/* Section A: Resultados por región */}
+      <div className="space-y-3">
+        <div className="label-sm">Resultados por región</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {REGION_DATA.map((region) => {
+            const regionVotes = getPresRegionVotes(region.id as RegionId);
+            const regionPct = PRES_BY_REGION[region.id as RegionId];
+            const leadCand = DISPLAY_CANDS.reduce((a, b) =>
+              (regionPct[a] ?? 0) >= (regionPct[b] ?? 0) ? a : b
+            );
+            return (
+              <div key={region.id} className="card p-4">
+                <div className="flex justify-between items-center mb-3">
+                  <div>
+                    <div className="label-xs">{region.id}</div>
+                    <div className="text-sm font-black text-slate-100">{region.name}</div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {DISPLAY_CANDS.map((candId) => {
+                    const pctVal = (regionPct[candId] ?? 0) * 100;
+                    const votes = regionVotes[candId] ?? 0;
+                    const isLeader = candId === leadCand;
+                    const color = CAND_COLORS[candId];
+                    return (
+                      <div key={candId}>
+                        <div className="flex justify-between text-xs mb-0.5">
+                          <span className={isLeader ? "font-bold text-slate-100" : "text-slate-400"}>
+                            {CAND_NAMES[candId]}
+                          </span>
+                          <span className={isLeader ? "font-black" : "font-semibold"} style={{ color }}>
+                            {votes.toLocaleString("es-ES")} ({pctVal.toFixed(1)}%)
+                          </span>
+                        </div>
+                        <div className="h-1.5 bg-[#1e3a5f] rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full"
+                            style={{ width: `${pctVal}%`, backgroundColor: color }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Section B: Resultados por distrito */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="label-sm">Resultados por distrito</div>
+          <select
+            className="text-xs bg-[#0a1628] border border-[#1e3a5f] rounded px-2 py-1 text-slate-300 focus:outline-none focus:border-slate-400"
+            value={presDistFilter}
+            onChange={(e) => {
+              setPresDistFilter(e.target.value);
+              setShowAllDistricts(false);
+            }}
+          >
+            <option value="all">Todas las regiones</option>
+            {Object.entries(REGION_LABELS).map(([id, name]) => (
+              <option key={id} value={id}>{id} — {name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="card overflow-x-auto">
+          <table className="w-full text-xs border-collapse">
+            <thead>
+              <tr className="border-b border-[#1e3a5f]">
+                <th className="text-left py-2 px-3 text-slate-400 font-semibold">Distrito</th>
+                <th className="text-left py-2 px-2 text-slate-400 font-semibold">Región</th>
+                <th className="text-right py-2 px-2 text-slate-400 font-semibold">TV</th>
+                <th className="text-right py-2 px-2 font-semibold" style={{ color: CAND_COLORS.vinyas }}>Vinyas</th>
+                <th className="text-right py-2 px-2 font-semibold" style={{ color: CAND_COLORS.calleja }}>Calleja</th>
+                <th className="text-right py-2 px-3 font-semibold" style={{ color: CAND_COLORS.santos }}>Santos</th>
+              </tr>
+            </thead>
+            <tbody>
+              {displayedDistricts.map((dist) => (
+                <tr key={dist.distId} className="border-b border-[#1e3a5f]/40 hover:bg-white/5">
+                  <td className="py-1.5 px-3 text-slate-300">{dist.distName}</td>
+                  <td className="py-1.5 px-2 text-slate-500">{dist.regionId}</td>
+                  <td className="py-1.5 px-2 text-right text-slate-400 tabular-nums">
+                    {Math.round(dist.tv).toLocaleString("es-ES")}
+                  </td>
+                  {(["vinyas", "calleja", "santos"] as const).map((candId, idx) => {
+                    const v = dist.votes[candId] ?? 0;
+                    const p = ((dist.pct[candId] ?? 0) * 100).toFixed(1);
+                    return (
+                      <td
+                        key={candId}
+                        className={`py-1.5 ${idx === 2 ? "px-3" : "px-2"} text-right tabular-nums`}
+                        style={{ color: CAND_COLORS[candId] }}
+                      >
+                        {v.toLocaleString("es-ES")} ({p}%)
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {filteredDistricts.length > 30 && (
+            <div className="p-3 text-center border-t border-[#1e3a5f]">
+              <button
+                type="button"
+                className="text-xs font-bold text-slate-400 hover:text-slate-200 transition-colors"
+                onClick={() => setShowAllDistricts((v) => !v)}
+              >
+                {showAllDistricts
+                  ? `▲ Mostrar menos`
+                  : `▼ Ver todos (${filteredDistricts.length} distritos)`}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Selector de fase */}
