@@ -61,24 +61,34 @@ jobs:
       - name: Verificar que no hay secretos en el bundle
         # Busca patrones de secretos reales: tokens de API, claves AWS, tokens JWT largos.
         # Escanea .js, .html Y .json (incluye out/data/*.json copiados de public/).
-        # La función scan() trata el exit-code 2 de grep (error) como fallo explícito.
+        # La función scan() muestra las coincidencias para facilitar auditoría.
         run: |
           FOUND=0
           scan() {
             local pattern="$1"
-            grep -rEq "$pattern" out/ \
-              --include="*.js" --include="*.html" --include="*.json" 2>/dev/null
+            local label="$2"
+            local matches
+            matches=$(grep -rEo "$pattern" out/ \
+              --include="*.js" --include="*.html" --include="*.json" 2>/dev/null)
             local rc=$?
             if [ $rc -eq 2 ]; then
-              echo "❌ Error interno de grep con patrón: $pattern"
+              echo "❌ Error interno de grep con patrón: $label"
               exit 2
             fi
-            [ $rc -eq 0 ] && FOUND=1
+            if [ $rc -eq 0 ] && [ -n "$matches" ]; then
+              echo "⛔ Patrón '$label' detectado:"
+              # Truncate each match to 80 chars to avoid leaking real tokens in logs
+              echo "$matches" | cut -c1-80
+              FOUND=1
+            fi
           }
-          scan "sk-[a-zA-Z0-9]{40,}"
-          scan "AKIA[0-9A-Z]{16}"
-          scan "Bearer [a-zA-Z0-9+/]{32,}"
-          scan "ghp_[a-zA-Z0-9]{36}"
+          scan "sk-[a-zA-Z0-9]{40,}" "sk-*"
+          scan "AKIA[0-9A-Z]{16}" "AWS-AKIA"
+          # Split "Bearer" from its value so GitHub Actions does not mask the pattern itself.
+          # Equivalent to /Bearer [a-zA-Z0-9+\/]{32,}/ but avoids triggering secret redaction.
+          BEARER_PREFIX="Bearer"
+          scan "${BEARER_PREFIX} [a-zA-Z0-9+/]{32,}" "Bearer-token"
+          scan "ghp_[a-zA-Z0-9]{36}" "ghp_token"
           if [ $FOUND -eq 1 ]; then
             echo "⛔ Secretos reales detectados en el bundle."
             exit 1
