@@ -14,7 +14,7 @@ const REGION_LIST: Omit<RegionData, "seats">[] = [
     govPct: { flores: .39, ruiz: .36, vera: .14, mendoza: .05, blank: .04, null: .02 },
   },
   {
-    id: "E2", name: "Florente", padron: 2881000,
+    id: "E2", name: "Florente", padron: 2760000,
     govCands: [
       { id: "morales",    name: "Luis Morales",       party: "PC",     color: "#0053b4" },
       { id: "garcia",     name: "Rosa García",        party: "MORENA", color: "#7a0000" },
@@ -24,7 +24,7 @@ const REGION_LIST: Omit<RegionData, "seats">[] = [
     govPct: { morales: .44, garcia: .40, castellano: .09, blank: .05, null: .02 },
   },
   {
-    id: "E3", name: "Litoral", padron: 2424000,
+    id: "E3", name: "Litoral", padron: 2520000,
     govCands: [
       { id: "torres", name: "Javier Torres", party: "PL",     color: "#ffc90d" },
       { id: "luna",   name: "Sofía Luna",    party: "EP",     color: "#e32642" },
@@ -34,7 +34,7 @@ const REGION_LIST: Omit<RegionData, "seats">[] = [
     govPct: { torres: .40, luna: .38, acosta: .12, blank: .07, null: .03 },
   },
   {
-    id: "E4", name: "Palmdale", padron: 1853000,
+    id: "E4", name: "Palmdale", padron: 2320000,
     govCands: [
       { id: "reyes",   name: "Carlos Reyes",    party: "RC",     color: "#00abff" },
       { id: "silva",   name: "Isabel Silva",    party: "EP",     color: "#e32642" },
@@ -45,7 +45,7 @@ const REGION_LIST: Omit<RegionData, "seats">[] = [
     govPct: { reyes: .35, silva: .29, mendez: .20, aguirre: .10, blank: .04, null: .02 },
   },
   {
-    id: "E5", name: "Sta. Catalina", padron: 1967000,
+    id: "E5", name: "Sta. Catalina", padron: 2160000,
     govCands: [
       { id: "romero",  name: "Marta Romero",   party: "PLP",    color: "#03427b" },
       { id: "castro",  name: "Felipe Castro",  party: "PC",     color: "#0053b4" },
@@ -55,7 +55,7 @@ const REGION_LIST: Omit<RegionData, "seats">[] = [
     govPct: { romero: .43, castro: .38, delgado: .10, blank: .07, null: .02 },
   },
   {
-    id: "E6", name: "Castellón", padron: 1708000,
+    id: "E6", name: "Castellón", padron: 1800000,
     govCands: [
       { id: "navarro", name: "Roberto Navarro", party: "PM",     color: "#4f25b6" },
       { id: "rios",    name: "Laura Ríos",      party: "MORENA", color: "#7a0000" },
@@ -66,17 +66,17 @@ const REGION_LIST: Omit<RegionData, "seats">[] = [
     govPct: { navarro: .38, rios: .42, guerrero: .09, vidal: .05, blank: .04, null: .02 },
   },
   {
-    id: "E7", name: "Alcalá", padron: 1587000,
+    id: "E7", name: "Alcalá", padron: 1540000,
     govCands: [
       { id: "herrera", name: "Pablo Herrera",   party: "PLP",    color: "#03427b" },
       { id: "jimenez", name: "Elena Jiménez",   party: "DC",     color: "#377fcb" },
       { id: "espinoza",name: "Marco Espinoza",  party: "PC",     color: "#0053b4" },
     ],
     partyPct: { PLP:.32, PC:.18, DC:.23, PM:.07, MD:.02, PL:.03, PAC:.01, PAN:.04, MORENA:.03, RC:.05, FPLN:.005, PBG:.005, EP:.01 },
-    govPct: { herrera: .52, jimenez: .33, espinoza: .09, blank: .05, null: .01 },
+    govPct: { herrera: .46, jimenez: .33, espinoza: .14, blank: .05, null: .02 },
   },
   {
-    id: "E8", name: "Río Bravo", padron: 1389000,
+    id: "E8", name: "Río Bravo", padron: 1084631,
     govCands: [
       { id: "vargas", name: "Miguel Vargas",   party: "PAN",    color: "#06338e" },
       { id: "ortiz",  name: "Gloria Ortiz",    party: "MORENA", color: "#7a0000" },

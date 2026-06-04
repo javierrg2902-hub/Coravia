@@ -6,7 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import HemicyclePie from "@/components/hemiciclo/HemicyclePie";
 import { CLR, NOM, PID } from "@/data/parties";
 import { DIST } from "@/data/districts";
-import type { RegionData, PartyId } from "@/types/election";
+import type { RegionData, PartyId, District } from "@/types/election";
 
 interface Props {
   region: RegionData;
@@ -16,10 +16,46 @@ interface Props {
 
 const GOV_PART = 0.70;
 
+// Returns govPct for a specific district (variation based on district party composition)
+function computeDistGovPct(dist: District, region: RegionData): Record<string, number> {
+  const acc: Record<string, number> = {};
+  const candIds = [...region.govCands.map(c => c.id), "blank", "null"];
+  candIds.forEach(id => { acc[id] = 0; });
+
+  const totalDistV = PID.reduce((s, p) => s + ((dist[p] as number) || 0), 0) || 1;
+
+  for (const pid of PID) {
+    const pv = (dist[pid] as number) || 0;
+    if (!pv) continue;
+    const frac = pv / totalDistV;
+    const primary = region.govCands.find(c => c.party === pid);
+    if (primary) {
+      acc[primary.id] += frac * 0.72;
+      const others = region.govCands.filter(c => c.id !== primary.id && c.party !== null);
+      const inds = region.govCands.filter(c => c.party === null);
+      others.forEach(c => { acc[c.id] += frac * 0.16 / (others.length || 1); });
+      inds.forEach(c => { acc[c.id] += frac * 0.06 / (inds.length || 1); });
+      acc.blank += frac * 0.04;
+      acc.null += frac * 0.02;
+    } else {
+      const regionNonBlank = region.govCands.reduce((s, c) => s + (region.govPct[c.id] || 0), 0) || 1;
+      region.govCands.forEach(c => { acc[c.id] += frac * (region.govPct[c.id] || 0) / regionNonBlank; });
+      acc.blank += frac * (region.govPct.blank || 0);
+      acc.null += frac * (region.govPct.null || 0);
+    }
+  }
+
+  const total = Object.values(acc).reduce((s, v) => s + v, 0) || 1;
+  for (const k of Object.keys(acc)) { acc[k] /= total; }
+  return acc;
+}
+
 export default function RegionCard({ region, isSelected, onClick }: Props) {
   const [hoveredParty, setHoveredParty] = useState<PartyId | null>(null);
   const [selectedParty, setSelectedParty] = useState<PartyId | null>(null);
   const [showDistricts, setShowDistricts] = useState(false);
+  const [distSearch, setDistSearch] = useState("");
+  const [selectedDist, setSelectedDist] = useState<string | null>(null);
 
   const activeParty = selectedParty ?? hoveredParty ?? null;
 
@@ -60,6 +96,14 @@ export default function RegionCard({ region, isSelected, onClick }: Props) {
   const regionDistricts = DIST
     .filter((d) => d.state === region.id)
     .sort((a, b) => b.tv - a.tv);
+
+  // Pre-compute per-district gov percentages
+  const distGovPcts = regionDistricts.map(d => computeDistGovPct(d, region));
+
+  // Filter districts by search
+  const visibleDistricts = regionDistricts.filter(d =>
+    d.name.toLowerCase().includes(distSearch.toLowerCase())
+  );
 
   return (
     <div
@@ -272,6 +316,16 @@ export default function RegionCard({ region, isSelected, onClick }: Props) {
                       transition={{ duration: 0.2 }}
                       className="overflow-hidden"
                     >
+                      {/* Search input */}
+                      <input
+                        type="text"
+                        placeholder="Buscar distrito..."
+                        value={distSearch}
+                        onChange={e => setDistSearch(e.target.value)}
+                        onClick={e => e.stopPropagation()}
+                        className="w-full mb-2 px-3 py-1.5 text-xs bg-[#0c1e3a] border border-[#1e3a5f] rounded text-slate-300 placeholder-slate-600 focus:outline-none focus:border-slate-500"
+                      />
+
                       <div className="overflow-x-auto">
                         <table className="w-full text-xs border-collapse">
                           <thead>
@@ -290,23 +344,53 @@ export default function RegionCard({ region, isSelected, onClick }: Props) {
                             </tr>
                           </thead>
                           <tbody>
-                            {regionDistricts.map((dist) => (
-                              <tr key={dist.id} className="border-b border-[#1e3a5f]/40 hover:bg-white/5">
-                                <td className="py-1 pr-3 text-slate-300">{dist.name}</td>
-                                <td className="py-1 px-2 text-right text-slate-400 tabular-nums">
-                                  {Math.round(dist.tv).toLocaleString("es-ES")}
-                                </td>
-                                {region.govCands.map((cand) => {
-                                  const v = Math.round(dist.tv * (region.govPct[cand.id] ?? 0));
-                                  const p = ((region.govPct[cand.id] ?? 0) * 100).toFixed(0);
-                                  return (
-                                    <td key={cand.id} className="py-1 px-2 text-right tabular-nums" style={{ color: cand.color }}>
-                                      {v.toLocaleString("es-ES")} ({p}%)
+                            {visibleDistricts.map((dist) => {
+                              const distIdx = regionDistricts.findIndex(d => d.id === dist.id);
+                              const dgp = distGovPcts[distIdx] ?? {};
+                              return (
+                                <>
+                                  <tr
+                                    key={dist.id}
+                                    className="border-b border-[#1e3a5f]/40 hover:bg-white/5 cursor-pointer"
+                                    onClick={() => setSelectedDist(dist.id === selectedDist ? null : dist.id)}
+                                  >
+                                    <td className="py-1 pr-3 text-slate-300">{dist.name}</td>
+                                    <td className="py-1 px-2 text-right text-slate-400 tabular-nums">
+                                      {Math.round(dist.tv).toLocaleString("es-ES")}
                                     </td>
-                                  );
-                                })}
-                              </tr>
-                            ))}
+                                    {region.govCands.map((cand) => {
+                                      const p = (dgp[cand.id] || 0);
+                                      const v = Math.round(dist.tv * p);
+                                      return (
+                                        <td key={cand.id} className="py-1 px-2 text-right tabular-nums" style={{ color: cand.color }}>
+                                          {v.toLocaleString("es-ES")} ({(p * 100).toFixed(0)}%)
+                                        </td>
+                                      );
+                                    })}
+                                  </tr>
+                                  {selectedDist === dist.id && (
+                                    <tr key={`${dist.id}-expand`}>
+                                      <td colSpan={region.govCands.length + 2} className="px-2 pb-2">
+                                        <div className="space-y-1 pt-1">
+                                          {region.govCands.map(cand => {
+                                            const p = (dgp[cand.id] || 0) * 100;
+                                            return (
+                                              <div key={cand.id} className="flex items-center gap-2 text-[10px]">
+                                                <span className="w-16 text-right truncate text-slate-400">{cand.name.split(" ")[0]}</span>
+                                                <div className="flex-1 h-2 bg-[#1e3a5f] rounded-full overflow-hidden">
+                                                  <div className="h-full rounded-full" style={{ width: `${p}%`, backgroundColor: cand.color }} />
+                                                </div>
+                                                <span className="w-10 text-right font-bold" style={{ color: cand.color }}>{p.toFixed(1)}%</span>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  )}
+                                </>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>

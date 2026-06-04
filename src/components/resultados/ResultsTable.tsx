@@ -6,9 +6,12 @@ import type { PartyResult } from "@/types/election";
 interface Props {
   results: PartyResult[];
   totalVotos: number;
+  blancos: number;
+  nulos: number;
 }
 
-export default function ResultsTable({ results, totalVotos }: Props) {
+export default function ResultsTable({ results, totalVotos, blancos, nulos }: Props) {
+  const grandTotal = totalVotos + blancos + nulos;
   return (
     /* Wrapper con fade derecho como indicador de scroll */
     <div className="relative">
@@ -66,10 +69,34 @@ export default function ResultsTable({ results, totalVotos }: Props) {
                 </td>
               </tr>
             ))}
+            <tr className="border-b border-[#1e3a5f]/50 opacity-60">
+              <td className="px-3 py-2.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-5 rounded-sm flex-shrink-0" style={{ backgroundColor: "#AAAAAA" }} />
+                  <span className="font-bold text-xs text-slate-400">En blanco</span>
+                </div>
+              </td>
+              <td className="px-3 py-2.5 text-right tabular-nums text-slate-400 text-xs">{blancos.toLocaleString("es-ES")}</td>
+              <td className="px-3 py-2.5 text-right tabular-nums text-slate-400 text-xs">{((blancos / (grandTotal || 1)) * 100).toFixed(2)}%</td>
+              <td className="px-3 py-2.5 text-right text-slate-600">—</td>
+              <td className="px-3 py-2.5 hidden md:table-cell" />
+            </tr>
+            <tr className="border-b border-[#1e3a5f]/50 opacity-40">
+              <td className="px-3 py-2.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-5 rounded-sm flex-shrink-0" style={{ backgroundColor: "#777777" }} />
+                  <span className="font-bold text-xs text-slate-500">Nulos</span>
+                </div>
+              </td>
+              <td className="px-3 py-2.5 text-right tabular-nums text-slate-500 text-xs">{nulos.toLocaleString("es-ES")}</td>
+              <td className="px-3 py-2.5 text-right tabular-nums text-slate-500 text-xs">{((nulos / (grandTotal || 1)) * 100).toFixed(2)}%</td>
+              <td className="px-3 py-2.5 text-right text-slate-600">—</td>
+              <td className="px-3 py-2.5 hidden md:table-cell" />
+            </tr>
             <tr className="bg-[#0c1e3a] font-bold">
               <td className="px-3 py-2.5 text-slate-400 text-[11px] uppercase tracking-wider">Total</td>
               <td className="px-3 py-2.5 text-right tabular-nums text-slate-200 text-xs">
-                {totalVotos.toLocaleString("es-ES")}
+                {grandTotal.toLocaleString("es-ES")}
               </td>
               <td className="px-3 py-2.5 text-right text-slate-200 text-xs">100%</td>
               <td className="px-3 py-2.5 text-right text-yellow-400 font-black">
