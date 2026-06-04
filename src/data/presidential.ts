@@ -54,5 +54,5 @@ export const PRES_BY_PHASE: PresPhaseResult[] = [
   { vinyas:.21, calleja:.21, monterroso:.09, cano:.08, santos:.08, alcantara:.07, salinas:.05, herreraD:.04, ibanez:.04, nieto:.03, restrepo:.02, ramos:.02, vargasM:.01, peralta:.01, blank:.02, null:.01 },
 ];
 
-export const PRES_TOTAL_PADRON = 608869;
+export const PRES_TOTAL_PADRON = 18_384_631;
 export const PRES_PARTICIPACION = 0.70;
