@@ -16,6 +16,9 @@ interface Props {
 export default function ComparacionTab({ activePhaseData }: Props) {
   const [historical, setHistorical] = useState<HistoricalElectionResult[]>([]);
   const [histError, setHistError] = useState(false);
+  const [highlightedParty, setHighlightedParty] = useState<string | null>(null);
+  const [hiddenParties, setHiddenParties] = useState<Set<string>>(new Set());
+  const [metric, setMetric] = useState<"votos" | "escanos">("votos");
 
   useEffect(() => {
     let active = true;
@@ -79,7 +82,48 @@ export default function ComparacionTab({ activePhaseData }: Props) {
       )}
 
       {allYears.length > 0 && (
-        <ElectionComparison elections={allYears} />
+        <div className="card p-4">
+          {/* Metric toggle */}
+          <div className="flex gap-2 mb-4">
+            {(["votos", "escanos"] as const).map(m => (
+              <button key={m} onClick={() => setMetric(m)}
+                className={`px-3 py-1.5 text-xs font-bold rounded transition-all
+                  ${metric === m ? "bg-yellow-500 text-black" : "bg-[#0c1e3a] text-slate-400 border border-[#1e3a5f] hover:border-slate-500"}`}>
+                {m === "votos" ? "% Voto" : "Escaños"}
+              </button>
+            ))}
+            {highlightedParty && (
+              <button onClick={() => setHighlightedParty(null)}
+                className="px-3 py-1.5 text-xs font-bold rounded bg-[#0c1e3a] text-slate-400 border border-[#1e3a5f] hover:border-slate-500">
+                Quitar selección
+              </button>
+            )}
+          </div>
+
+          {/* Party filter checkboxes */}
+          <div className="flex flex-wrap gap-1 mb-4">
+            {PID.map(p => (
+              <button key={p} onClick={() => setHiddenParties(prev => {
+                const next = new Set(prev);
+                if (next.has(p)) next.delete(p); else next.add(p);
+                return next;
+              })}
+                className={`px-2 py-1 text-[10px] font-black rounded transition-all
+                  ${hiddenParties.has(p) ? "opacity-30 bg-[#0c1e3a] border border-[#1e3a5f]" : "border border-transparent"}`}
+                style={{ color: CLR[p] }}>
+                {p}
+              </button>
+            ))}
+          </div>
+
+          <ElectionComparison
+            elections={allYears}
+            highlightedParty={highlightedParty}
+            setHighlightedParty={setHighlightedParty}
+            hiddenParties={hiddenParties}
+            metric={metric}
+          />
+        </div>
       )}
 
       <div className="card p-4">
@@ -98,34 +142,42 @@ export default function ComparacionTab({ activePhaseData }: Props) {
               </tr>
             </thead>
             <tbody>
-              {PID.map((p) => {
-                const vals = allYears.map((y) => y.votosPct[p] ?? 0);
-                const first = vals[0] ?? 0;
-                const last = vals[vals.length - 1] ?? 0;
-                const delta = last - first;
-                return (
-                  <tr key={p} className="border-b border-[#1e3a5f]/40">
-                    <td className="py-2 px-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-4 rounded-sm" style={{ backgroundColor: CLR[p] }} />
-                        <span className="font-black uppercase text-[11px]" style={{ color: CLR[p] }}>{p}</span>
-                      </div>
-                    </td>
-                    {vals.map((v, i) => (
-                      <td key={i} className="text-right py-2 px-3 tabular-nums text-slate-300">
-                        {v.toFixed(1)}%
+              {PID
+                .filter(p => !hiddenParties.has(p))
+                .map((p) => {
+                  const vals = allYears.map((y) => y.votosPct[p] ?? 0);
+                  const first = vals[0] ?? 0;
+                  const last = vals[vals.length - 1] ?? 0;
+                  const delta = last - first;
+                  const isHighlighted = !highlightedParty || highlightedParty === p;
+                  return (
+                    <tr
+                      key={p}
+                      className="border-b border-[#1e3a5f]/40 cursor-pointer hover:bg-white/5 transition-all"
+                      style={{ opacity: isHighlighted ? 1 : 0.2 }}
+                      onClick={() => setHighlightedParty(highlightedParty === p ? null : p)}
+                    >
+                      <td className="py-2 px-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-4 rounded-sm" style={{ backgroundColor: CLR[p] }} />
+                          <span className="font-black uppercase text-[11px]" style={{ color: CLR[p] }}>{p}</span>
+                        </div>
                       </td>
-                    ))}
-                    <td className={`text-right py-2 px-3 tabular-nums font-bold ${
-                      histError
-                        ? "text-slate-600"
-                        : delta > 0 ? "text-green-400" : delta < 0 ? "text-red-400" : "text-slate-500"
-                    }`}>
-                      {histError ? "N/A" : `${delta > 0 ? "+" : ""}${delta.toFixed(1)}pp`}
-                    </td>
-                  </tr>
-                );
-              })}
+                      {vals.map((v, i) => (
+                        <td key={i} className="text-right py-2 px-3 tabular-nums text-slate-300">
+                          {v.toFixed(1)}%
+                        </td>
+                      ))}
+                      <td className={`text-right py-2 px-3 tabular-nums font-bold ${
+                        histError
+                          ? "text-slate-600"
+                          : delta > 0 ? "text-green-400" : delta < 0 ? "text-red-400" : "text-slate-500"
+                      }`}>
+                        {histError ? "N/A" : `${delta > 0 ? "+" : ""}${delta.toFixed(1)}pp`}
+                      </td>
+                    </tr>
+                  );
+                })}
             </tbody>
           </table>
         </div>
