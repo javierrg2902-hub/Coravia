@@ -162,7 +162,7 @@ export default function ElectionDashboard() {
             {activeTab === "regional" && <RegionalTab />}
 
             {/* ── Comparación ── */}
-            {activeTab === "comparacion" && <ComparacionTab phaseIdx={phaseIdx} />}
+            {activeTab === "comparacion" && <ComparacionTab activePhaseData={activePhaseData} />}
 
           </motion.div>
         </AnimatePresence>

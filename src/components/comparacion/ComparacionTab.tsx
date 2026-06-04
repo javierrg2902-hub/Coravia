@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import ElectionComparison from "./ElectionComparison";
-import type { HistoricalDataJson, HistoricalElectionResult } from "@/types/election";
-import { CACHE } from "@/data/phases";
+import type { HistoricalDataJson, HistoricalElectionResult, PhaseData } from "@/types/election";
 import { PID, CLR } from "@/data/parties";
 import { hasNoDangerousKeys } from "@/lib/validation";
 
@@ -11,10 +10,10 @@ const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "/Coravia";
 const MAX_HIST_BYTES = 50_000;
 
 interface Props {
-  phaseIdx: number;
+  activePhaseData: PhaseData;
 }
 
-export default function ComparacionTab({ phaseIdx }: Props) {
+export default function ComparacionTab({ activePhaseData }: Props) {
   const [historical, setHistorical] = useState<HistoricalElectionResult[]>([]);
   const [histError, setHistError] = useState(false);
 
@@ -44,11 +43,10 @@ export default function ComparacionTab({ phaseIdx }: Props) {
     return () => { active = false; };
   }, []);
 
-  const currentPhase = CACHE[phaseIdx] ?? CACHE[CACHE.length - 1];
-  const totalVotos = currentPhase.vv || 1;
+  const totalVotos = activePhaseData.vv || 1;
   const currentPct: Partial<Record<string, number>> = {};
   PID.forEach((p) => {
-    currentPct[p] = (currentPhase.votes[p] / totalVotos) * 100;
+    currentPct[p] = (activePhaseData.votes[p] / totalVotos) * 100;
   });
 
   const allYears = [
