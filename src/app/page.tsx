@@ -19,6 +19,7 @@ import PresidencialTab from "@/components/presidencial/PresidencialTab";
 import { useElectionData } from "@/hooks/useElectionData";
 import { useElectionCalc } from "@/hooks/useElectionCalc";
 import { TMESAS } from "@/data/phases";
+import { PRES_TOTAL_PADRON } from "@/data/presidential";
 
 const RegionalTab = dynamic(() => import("@/components/regional/RegionalTab"), { ssr: false });
 const ComparacionTab = dynamic(() => import("@/components/comparacion/ComparacionTab"), { ssr: false });
@@ -68,7 +69,7 @@ export default function ElectionDashboard() {
         {(activeTab === "resultados" || activeTab === "hemiciclo") && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
             {([
-              ["Votos válidos",   activePhaseData.vv.toLocaleString("es-ES"),  "text-slate-100"],
+              ["Padrón electoral", PRES_TOTAL_PADRON.toLocaleString("es-ES"), "text-slate-100"],
               ["Escrutado",       `${escrutinadoPct}%`,                        "text-yellow-400"],
               ["Mesas",           `${activePhaseData.mc.toLocaleString("es-ES")} / ${TMESAS.toLocaleString("es-ES")}`, "text-slate-300"],
               ["Escaños asig.",   `${totalSeats} / 25`,                        "text-blue-400"],

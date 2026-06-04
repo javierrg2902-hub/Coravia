@@ -51,7 +51,8 @@ export type PresPhaseResult = Record<string, number>;
 export interface GovCandidate {
   id: string;
   name: string;
-  party: PartyId;
+  party: PartyId | null;
+  partyName?: string; // label for independents when party is null
   color: string;
 }
 
