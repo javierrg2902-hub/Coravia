@@ -5,6 +5,8 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Permisos mínimos necesarios: solo lectura del repo + escritura en Pages.
+# Ningún otro token tiene acceso.
 permissions:
   contents: read
   pages: write
@@ -15,21 +17,80 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  security-audit:
+    name: Auditoría de seguridad
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
-      - run: npm run build
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      # Falla el pipeline si hay vulnerabilidades de severidad HIGH o CRITICAL.
+      # Las vulnerabilidades de devDependencies (eslint, typescript-parser) se
+      # excluyen porque no se incluyen en el bundle desplegado.
+      - name: Auditoría npm — falla en HIGH/CRITICAL de producción
+        run: npm audit --audit-level=high --omit=dev
+
+  build:
+    name: Build
+    needs: security-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci --ignore-scripts
+
+      - name: Build Next.js (export estático)
+        run: npm run build
+        env:
+          # Aseguramos que el basePath esté disponible también en tiempo de build
+          NEXT_PUBLIC_BASE_PATH: /Coravia
+
+      - name: Verificar que no hay secretos en el bundle
+        # Busca patrones de secretos reales: tokens de API, claves AWS, tokens JWT largos.
+        # Escanea .js, .html Y .json (incluye out/data/*.json copiados de public/).
+        # La función scan() trata el exit-code 2 de grep (error) como fallo explícito.
+        run: |
+          FOUND=0
+          scan() {
+            local pattern="$1"
+            grep -rEq "$pattern" out/ \
+              --include="*.js" --include="*.html" --include="*.json" 2>/dev/null
+            local rc=$?
+            if [ $rc -eq 2 ]; then
+              echo "❌ Error interno de grep con patrón: $pattern"
+              exit 2
+            fi
+            [ $rc -eq 0 ] && FOUND=1
+          }
+          scan "sk-[a-zA-Z0-9]{40,}"
+          scan "AKIA[0-9A-Z]{16}"
+          scan "Bearer [a-zA-Z0-9+/]{32,}"
+          scan "ghp_[a-zA-Z0-9]{36}"
+          if [ $FOUND -eq 1 ]; then
+            echo "⛔ Secretos reales detectados en el bundle."
+            exit 1
+          fi
+          echo "✅ No se detectaron secretos reales en el bundle."
+
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: out
 
   deploy:
+    name: Despliegue en GitHub Pages
     needs: build
     runs-on: ubuntu-latest
     environment:

@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fuente del sistema — Inter está instalada nativamente en Windows 11, macOS 10.15+
+   e iOS 13+. En sistemas sin ella, Segoe UI o system-ui son equivalentes visuales.
+   Eliminamos la dependencia de Google Fonts para evitar filtrar la IP del visitante
+   a un tercero y cumplir el CSP sin origen externo en font-src. */
+
+:root {
+  --bg-page: #060f1e;
+  --bg-card: #0a1628;
+  --bg-inner: #0c1e3a;
+  --border: #1e3a5f;
+  --accent: #EAB308;
+  --text-primary: #f1f5f9;
+  --text-muted: #94a3b8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a1628;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e3a5f;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2d4a6e;
+}
+
+/* Recharts tooltip override */
+.recharts-tooltip-wrapper {
+  outline: none;
+}
+
+/* Tab scrollbar horizontal sin mostrar */
+.tab-scroll::-webkit-scrollbar {
+  height: 0;
+}
+
+@layer components {
+  .card {
+    @apply bg-[#0a1628] border border-[#1e3a5f] rounded-lg;
+  }
+  .card-inner {
+    @apply bg-[#0c1e3a] border border-[#1e3a5f] rounded-md;
+  }
+  .label-xs {
+    @apply text-[10px] font-bold uppercase tracking-widest text-slate-500;
+  }
+  .label-sm {
+    @apply text-[11px] font-bold uppercase tracking-wider text-slate-400;
+  }
+  .big-number {
+    @apply text-3xl font-black text-slate-100 tabular-nums;
+  }
+  .party-acronym {
+    @apply text-xs font-black uppercase;
+  }
+}

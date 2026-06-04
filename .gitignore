@@ -1,4 +1,29 @@
+# Dependencias
 node_modules/
+
+# Builds — nunca subir artefactos compilados
 dist/
+out/
+.next/
+
+# Variables de entorno — pueden contener secretos
+.env
+.env.local
+.env*.local
+
+# Sistema operativo
 .DS_Store
+Thumbs.db
+
+# Editor
 *.local
+.vscode/settings.json
+.idea/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Cobertura de tests
+coverage/
