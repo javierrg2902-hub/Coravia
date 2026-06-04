@@ -2,10 +2,10 @@
 
 import { motion } from "framer-motion";
 import { CLR } from "@/data/parties";
-import { REGION_DATA } from "@/data/regional";
-import type { RegionId } from "@/types/election";
+import type { RegionId, RegionData } from "@/types/election";
 
 interface Props {
+  regionData: RegionData[];
   selectedRegion: RegionId | null;
   onRegionSelect: (id: RegionId) => void;
 }
@@ -26,8 +26,8 @@ const REGION_NAMES: Record<RegionId, string> = {
   E5: "Sta. Catalina",  E6: "Castellón", E7: "Alcalá", E8: "Río Bravo",
 };
 
-function getRegionLeader(regionId: RegionId): { color: string; party: string } | null {
-  const region = REGION_DATA.find((r) => r.id === regionId);
+function getRegionLeader(regionId: RegionId, regionData: RegionData[]): { color: string; party: string } | null {
+  const region = regionData.find((r) => r.id === regionId);
   if (!region) return null;
   const top = Object.entries(region.govPct)
     .filter(([id]) => id !== "blank" && id !== "null")
@@ -37,7 +37,7 @@ function getRegionLeader(regionId: RegionId): { color: string; party: string } |
   return cand ? { color: CLR[cand.party] ?? "#888888", party: cand.party } : null;
 }
 
-export default function CoraviaMap({ selectedRegion, onRegionSelect }: Props) {
+export default function CoraviaMap({ regionData, selectedRegion, onRegionSelect }: Props) {
   return (
     <div className="w-full">
       <div className="label-sm mb-3">Mapa Electoral — República de Coravia</div>
@@ -54,7 +54,7 @@ export default function CoraviaMap({ selectedRegion, onRegionSelect }: Props) {
           {(Object.entries(REGION_PATHS) as [RegionId, typeof REGION_PATHS[RegionId]][]).map(
             ([regionId, { d, labelX, labelY }]) => {
               const isSelected = selectedRegion === regionId;
-              const leader = getRegionLeader(regionId);
+              const leader = getRegionLeader(regionId, regionData);
               const fillColor = leader ? leader.color + "bb" : "#1e3a5f";
 
               return (
@@ -109,8 +109,8 @@ export default function CoraviaMap({ selectedRegion, onRegionSelect }: Props) {
 
       {/* Leyenda de regiones — botones con toque mínimo garantizado */}
       <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {REGION_DATA.map((r) => {
-          const leader = getRegionLeader(r.id);
+        {regionData.map((r) => {
+          const leader = getRegionLeader(r.id, regionData);
           return (
             <button
               key={r.id}

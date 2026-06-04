@@ -29,7 +29,7 @@ export default function ElectionDashboard() {
 
   const {
     phaseIdx, setPhaseIdx,
-    activePhaseData, isLive,
+    activePhaseData, liveData, isLive,
     escrutinadoPct, faseName, lastPolled, error,
   } = useElectionData();
 
@@ -159,7 +159,7 @@ export default function ElectionDashboard() {
             )}
 
             {/* ── Regional ── */}
-            {activeTab === "regional" && <RegionalTab />}
+            {activeTab === "regional" && <RegionalTab liveData={liveData} />}
 
             {/* ── Comparación ── */}
             {activeTab === "comparacion" && <ComparacionTab activePhaseData={activePhaseData} />}
